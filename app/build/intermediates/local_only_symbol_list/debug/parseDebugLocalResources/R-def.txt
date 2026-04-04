@@ -1,0 +1,20 @@
+R_DEF: Internal format may change without notice
+local
+drawable dot_active
+drawable dot_inactive
+id btnToggle
+id sliderSensitivity
+id statusDot
+id switchCharging
+id switchFall
+id switchSlap
+id tvSensitivityValue
+id tvStatus
+layout activity_main
+raw chargesound
+raw fallsound
+raw slapsound
+style Theme.MoanPhone
+xml backup_rules
+xml data_extraction_rules
+xml network_security_config

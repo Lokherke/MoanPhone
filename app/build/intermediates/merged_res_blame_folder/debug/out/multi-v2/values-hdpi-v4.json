@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.moanphone.app-mergeDebugResources-29:/values-hdpi-v4/values-hdpi-v4.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\chali\\.gradle\\caches\\9.0.0\\transforms\\5bc4c06604e421896ec5cd30b5eb01c2\\transformed\\appcompat-1.7.0\\res\\values-hdpi-v4\\values-hdpi-v4.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "6",
+                        "endColumns": "13",
+                        "endOffsets": "327"
+                    }
+                }
+            ]
+        }
+    ]
+}

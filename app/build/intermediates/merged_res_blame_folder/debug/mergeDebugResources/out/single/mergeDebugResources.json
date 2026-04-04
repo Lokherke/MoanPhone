@@ -1,0 +1,38 @@
+[
+    {
+        "merged": "C:\\Users\\chali\\.gradle\\daemon\\8.7\\com.moanphone.app-debug-31:\\drawable_dot_active.xml.flat",
+        "source": "C:\\Users\\chali\\.gradle\\daemon\\8.7\\com.moanphone.app-main-33:\\drawable\\dot_active.xml"
+    },
+    {
+        "merged": "C:\\Users\\chali\\.gradle\\daemon\\8.7\\com.moanphone.app-debug-31:\\raw_chargesound.mp3.flat",
+        "source": "C:\\Users\\chali\\.gradle\\daemon\\8.7\\com.moanphone.app-main-33:\\raw\\chargesound.mp3"
+    },
+    {
+        "merged": "C:\\Users\\chali\\.gradle\\daemon\\8.7\\com.moanphone.app-debug-31:\\raw_slapsound.mp3.flat",
+        "source": "C:\\Users\\chali\\.gradle\\daemon\\8.7\\com.moanphone.app-main-33:\\raw\\slapsound.mp3"
+    },
+    {
+        "merged": "C:\\Users\\chali\\.gradle\\daemon\\8.7\\com.moanphone.app-debug-31:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\chali\\.gradle\\daemon\\8.7\\com.moanphone.app-main-33:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "com.moanphone.app-debug-31:/xml_network_security_config.xml.flat",
+        "source": "com.moanphone.app-main-33:/xml/network_security_config.xml"
+    },
+    {
+        "merged": "C:\\Users\\chali\\.gradle\\daemon\\8.7\\com.moanphone.app-debug-31:\\drawable_dot_inactive.xml.flat",
+        "source": "C:\\Users\\chali\\.gradle\\daemon\\8.7\\com.moanphone.app-main-33:\\drawable\\dot_inactive.xml"
+    },
+    {
+        "merged": "com.moanphone.app-debug-31:/xml_data_extraction_rules.xml.flat",
+        "source": "com.moanphone.app-main-33:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "com.moanphone.app-debug-31:/xml_backup_rules.xml.flat",
+        "source": "com.moanphone.app-main-33:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "C:\\Users\\chali\\.gradle\\daemon\\8.7\\com.moanphone.app-debug-31:\\raw_fallsound.mp3.flat",
+        "source": "C:\\Users\\chali\\.gradle\\daemon\\8.7\\com.moanphone.app-main-33:\\raw\\fallsound.mp3"
+    }
+]
