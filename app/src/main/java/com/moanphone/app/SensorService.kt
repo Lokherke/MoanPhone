@@ -25,16 +25,25 @@ class SensorService : Service(), SensorEventListener {
     private var chargeMediaPlayer: MediaPlayer? = null
 
     var isRunning = false
-    var sensitivity = 50f
-    var fallEnabled = true
-    var slapEnabled = true
-    var chargingEnabled = true
+    private var sensitivity = 50f
+    private var fallEnabled = true
+    private var slapEnabled = true
+    private var chargingEnabled = true
 
-    fun updateSettings(sensitivity: Float, fall: Boolean, slap: Boolean, charging: Boolean) {
-        this.sensitivity = sensitivity
-        this.fallEnabled = fall
-        this.slapEnabled = slap
-        this.chargingEnabled = charging
+    fun setSensitivity(value: Float) {
+        this.sensitivity = value
+    }
+
+    fun setFallDetectionEnabled(enabled: Boolean) {
+        this.fallEnabled = enabled
+    }
+
+    fun setSlapDetectionEnabled(enabled: Boolean) {
+        this.slapEnabled = enabled
+    }
+
+    fun setChargingDetectionEnabled(enabled: Boolean) {
+        this.chargingEnabled = enabled
     }
 
     private var isFalling = false
