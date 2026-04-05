@@ -31,89 +31,53 @@ class SensorService : Service(), SensorEventListener {
     private var chargingEnabled = true
     private var voiceType = VoiceType.FEMALE
 
-    private val prefs by lazy { getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE) }
-
     fun setSensitivity(value: Float) {
         this.sensitivity = value
-        prefs.edit().putFloat("sensitivity", value).apply()
     }
 
     fun setFallDetectionEnabled(enabled: Boolean) {
         this.fallEnabled = enabled
-        prefs.edit().putBoolean("fallEnabled", enabled).apply()
-        updateSensorRegistration()
     }
 
     fun setSlapDetectionEnabled(enabled: Boolean) {
         this.slapEnabled = enabled
-        prefs.edit().putBoolean("slapEnabled", enabled).apply()
-        updateSensorRegistration()
     }
 
     fun setChargingDetectionEnabled(enabled: Boolean) {
         this.chargingEnabled = enabled
-        prefs.edit().putBoolean("chargingEnabled", enabled).apply()
     }
 
     fun setVoiceType(type: VoiceType) {
         this.voiceType = type
-        prefs.edit().putString("voiceType", type.name).apply()
-    }
-
-    private fun loadSettings() {
-        sensitivity = prefs.getFloat("sensitivity", 50f)
-        fallEnabled = prefs.getBoolean("fallEnabled", true)
-        slapEnabled = prefs.getBoolean("slapEnabled", true)
-        chargingEnabled = prefs.getBoolean("chargingEnabled", true)
-        val voiceStr = prefs.getString("voiceType", VoiceType.FEMALE.name)
-        voiceType = try { VoiceType.valueOf(voiceStr ?: "FEMALE") } catch (e: Exception) { VoiceType.FEMALE }
-    }
-
-    private fun updateSensorRegistration() {
-        if (!isRunning) return
-        sensorManager.unregisterListener(this)
-        if (fallEnabled || slapEnabled) {
-            accelerometer?.also {
-                sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
-            }
-        }
     }
 
     private var isFalling = false
     private var fallStartTime = 0L
-    
-    // Efficiency: Pre-calculate squared thresholds to avoid sqrt() in onSensorChanged
-    private val slapThresholdSq: Float
-        get() {
-            val t = 40f - (sensitivity / 100f) * 28f
-            return t * t
-        }
-    private val fallThresholdLowSq: Float
-        get() {
-            val t = 1f + (sensitivity / 100f) * 4f
-            return t * t
-        }
-    private val FALL_IMPACT_HIGH_SQ = 400.0f // 20.0 squared
+    private val FALL_THRESHOLD_LOW = 3.0f
+    private val FALL_IMPACT_HIGH = 20.0f
+
+    private val slapThreshold: Float
+        get() = 40f - (sensitivity / 100f) * 28f
+    private val fallThresholdLow: Float
+        get() = 1f + (sensitivity / 100f) * 4f
 
     override fun onCreate() {
         super.onCreate()
-        loadSettings()
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Efficiency: Read initial state from intent to avoid delay before Activity binds
         intent?.let {
-            if (it.hasExtra("EXTRA_VOICE_TYPE")) {
-                val vType = it.getStringExtra("EXTRA_VOICE_TYPE")
-                voiceType = try { VoiceType.valueOf(vType ?: "FEMALE") } catch (e: Exception) { voiceType }
-                sensitivity = it.getFloatExtra("EXTRA_SENSITIVITY", sensitivity)
-                fallEnabled = it.getBooleanExtra("EXTRA_FALL_ENABLED", fallEnabled)
-                slapEnabled = it.getBooleanExtra("EXTRA_SLAP_ENABLED", slapEnabled)
-                chargingEnabled = it.getBooleanExtra("EXTRA_CHARGING_ENABLED", chargingEnabled)
+            val voiceStr = it.getStringExtra("EXTRA_VOICE_TYPE")
+            if (voiceStr != null) {
+                voiceType = try { VoiceType.valueOf(voiceStr) } catch (e: Exception) { VoiceType.FEMALE }
             }
+            sensitivity = it.getFloatExtra("EXTRA_SENSITIVITY", sensitivity)
+            fallEnabled = it.getBooleanExtra("EXTRA_FALL_ENABLED", fallEnabled)
+            slapEnabled = it.getBooleanExtra("EXTRA_SLAP_ENABLED", slapEnabled)
+            chargingEnabled = it.getBooleanExtra("EXTRA_CHARGING_ENABLED", chargingEnabled)
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -127,7 +91,9 @@ class SensorService : Service(), SensorEventListener {
     }
 
     private fun startListening() {
-        updateSensorRegistration()
+        accelerometer?.also {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
+        }
         registerChargingReceiver()
     }
 
@@ -144,21 +110,16 @@ class SensorService : Service(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_ACCELEROMETER) return
-        
-        // Efficiency: Use squared magnitude to avoid expensive sqrt() and pow() calls
-        val x = event.values[0]
-        val y = event.values[1]
-        val z = event.values[2]
-        val magnitudeSq = x * x + y * y + z * z
+        val magnitude = sqrt(event.values[0].pow(2) + event.values[1].pow(2) + event.values[2].pow(2))
         val now = SystemClock.elapsedRealtime()
 
         if (fallEnabled) {
-            if (!isFalling && magnitudeSq < fallThresholdLowSq) {
+            if (!isFalling && magnitude < fallThresholdLow) {
                 isFalling = true
                 fallStartTime = now
             } else if (isFalling) {
                 val fallDuration = now - fallStartTime
-                if (magnitudeSq > FALL_IMPACT_HIGH_SQ && fallDuration in 100..2000) {
+                if (magnitude > FALL_IMPACT_HIGH && fallDuration in 100..2000) {
                     isFalling = false
                     triggerMoan(MoanType.FALL)
                 } else if (fallDuration > 2500) {
@@ -167,7 +128,7 @@ class SensorService : Service(), SensorEventListener {
             }
         }
 
-        if (slapEnabled && magnitudeSq > slapThresholdSq) {
+        if (slapEnabled && magnitude > slapThreshold) {
             triggerMoan(MoanType.SLAP)
         }
     }

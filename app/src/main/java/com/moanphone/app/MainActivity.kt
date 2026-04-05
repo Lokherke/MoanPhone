@@ -21,8 +21,17 @@ class MainActivity : AppCompatActivity() {
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
             val localBinder = binder as SensorService.LocalBinder
-            sensorService = localBinder.getService()
+            val service = localBinder.getService()
+            sensorService = service
             isBound = true
+            
+            // Push current UI state to service immediately upon connection
+            service.setVoiceType(if (binding.rbMale.isChecked) SensorService.VoiceType.MALE else SensorService.VoiceType.FEMALE)
+            service.setSensitivity(binding.sliderSensitivity.value)
+            service.setFallDetectionEnabled(binding.switchFall.isChecked)
+            service.setSlapDetectionEnabled(binding.switchSlap.isChecked)
+            service.setChargingDetectionEnabled(binding.switchCharging.isChecked)
+            
             updateUI()
         }
 
@@ -56,26 +65,18 @@ class MainActivity : AppCompatActivity() {
 
         binding.sliderSensitivity.addOnChangeListener { _, value, _ ->
             binding.tvSensitivityValue.text = "Sensitivity: ${value.toInt()}%"
-            val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
-            prefs.edit().putFloat("sensitivity", value).apply()
             sensorService?.setSensitivity(value)
         }
 
         binding.switchFall.setOnCheckedChangeListener { _, checked ->
-            val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
-            prefs.edit().putBoolean("fallEnabled", checked).apply()
             sensorService?.setFallDetectionEnabled(checked)
         }
 
         binding.switchSlap.setOnCheckedChangeListener { _, checked ->
-            val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
-            prefs.edit().putBoolean("slapEnabled", checked).apply()
             sensorService?.setSlapDetectionEnabled(checked)
         }
 
         binding.switchCharging.setOnCheckedChangeListener { _, checked ->
-            val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
-            prefs.edit().putBoolean("chargingEnabled", checked).apply()
             sensorService?.setChargingDetectionEnabled(checked)
         }
 
@@ -85,20 +86,18 @@ class MainActivity : AppCompatActivity() {
             } else {
                 SensorService.VoiceType.FEMALE
             }
-            val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
-            prefs.edit().putString("voiceType", voiceType.name).apply()
             sensorService?.setVoiceType(voiceType)
         }
     }
 
     private fun startMoanService() {
-        val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
+        val voiceType = if (binding.rbMale.isChecked) "MALE" else "FEMALE"
         val intent = Intent(this, SensorService::class.java).apply {
-            putExtra("EXTRA_VOICE_TYPE", prefs.getString("voiceType", SensorService.VoiceType.FEMALE.name))
-            putExtra("EXTRA_SENSITIVITY", prefs.getFloat("sensitivity", 50f))
-            putExtra("EXTRA_FALL_ENABLED", prefs.getBoolean("fallEnabled", true))
-            putExtra("EXTRA_SLAP_ENABLED", prefs.getBoolean("slapEnabled", true))
-            putExtra("EXTRA_CHARGING_ENABLED", prefs.getBoolean("chargingEnabled", true))
+            putExtra("EXTRA_VOICE_TYPE", voiceType)
+            putExtra("EXTRA_SENSITIVITY", binding.sliderSensitivity.value)
+            putExtra("EXTRA_FALL_ENABLED", binding.switchFall.isChecked)
+            putExtra("EXTRA_SLAP_ENABLED", binding.switchSlap.isChecked)
+            putExtra("EXTRA_CHARGING_ENABLED", binding.switchCharging.isChecked)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
@@ -127,21 +126,9 @@ class MainActivity : AppCompatActivity() {
         binding.tvStatus.text = if (running) "Active – listening for events" else "Inactive"
         binding.statusDot.setImageResource(if (running) R.drawable.dot_active else R.drawable.dot_inactive)
         
-        // Update slider and switches to match current saved state
-        val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
-        val sensitivity = prefs.getFloat("sensitivity", 50f)
-        binding.sliderSensitivity.value = sensitivity
-        binding.tvSensitivityValue.text = "Sensitivity: ${sensitivity.toInt()}%"
-        
-        binding.switchFall.isChecked = prefs.getBoolean("fallEnabled", true)
-        binding.switchSlap.isChecked = prefs.getBoolean("slapEnabled", true)
-        binding.switchCharging.isChecked = prefs.getBoolean("chargingEnabled", true)
-        
-        val voiceStr = prefs.getString("voiceType", SensorService.VoiceType.FEMALE.name)
-        if (voiceStr == SensorService.VoiceType.MALE.name) {
-            binding.rbMale.isChecked = true
-        } else {
-            binding.rbFemale.isChecked = true
+        // Update slider and switches to match current service state if needed
+        sensorService?.let {
+            // These would ideally come from the service or shared prefs
         }
     }
 
