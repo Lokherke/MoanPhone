@@ -29,6 +29,7 @@ class SensorService : Service(), SensorEventListener {
     private var fallEnabled = true
     private var slapEnabled = true
     private var chargingEnabled = true
+    private var voiceType = VoiceType.FEMALE
 
     fun setSensitivity(value: Float) {
         this.sensitivity = value
@@ -44,6 +45,10 @@ class SensorService : Service(), SensorEventListener {
 
     fun setChargingDetectionEnabled(enabled: Boolean) {
         this.chargingEnabled = enabled
+    }
+
+    fun setVoiceType(type: VoiceType) {
+        this.voiceType = type
     }
 
     private var isFalling = false
@@ -119,9 +124,9 @@ class SensorService : Service(), SensorEventListener {
 
     private fun triggerMoan(type: MoanType) {
         val resId = when (type) {
-            MoanType.FALL -> R.raw.fallsound
-            MoanType.SLAP -> R.raw.slapsound
-            MoanType.CHARGE -> R.raw.chargesound
+            MoanType.FALL -> if (voiceType == VoiceType.FEMALE) R.raw.fallsound else R.raw.m_fallsound
+            MoanType.SLAP -> if (voiceType == VoiceType.FEMALE) R.raw.slapsound else R.raw.m_slapsound
+            MoanType.CHARGE -> if (voiceType == VoiceType.FEMALE) R.raw.chargesound else R.raw.m_chargesound
         }
         try {
             when (type) {
@@ -200,4 +205,5 @@ class SensorService : Service(), SensorEventListener {
         const val NOTIFICATION_ID = 1
     }
     enum class MoanType { FALL, SLAP, CHARGE }
+    enum class VoiceType { FEMALE, MALE }
 }

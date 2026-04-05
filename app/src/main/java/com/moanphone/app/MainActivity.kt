@@ -70,6 +70,15 @@ class MainActivity : AppCompatActivity() {
         binding.switchCharging.setOnCheckedChangeListener { _, checked ->
             sensorService?.setChargingDetectionEnabled(checked)
         }
+
+        binding.rgVoiceType.setOnCheckedChangeListener { _, checkedId ->
+            val voiceType = if (checkedId == R.id.rbMale) {
+                SensorService.VoiceType.MALE
+            } else {
+                SensorService.VoiceType.FEMALE
+            }
+            sensorService?.setVoiceType(voiceType)
+        }
     }
 
     private fun startMoanService() {
