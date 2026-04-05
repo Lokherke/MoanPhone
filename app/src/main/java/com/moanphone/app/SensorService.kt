@@ -37,14 +37,27 @@ class SensorService : Service(), SensorEventListener {
 
     fun setFallDetectionEnabled(enabled: Boolean) {
         this.fallEnabled = enabled
+        updateSensorRegistration()
     }
 
     fun setSlapDetectionEnabled(enabled: Boolean) {
         this.slapEnabled = enabled
+        updateSensorRegistration()
     }
 
     fun setChargingDetectionEnabled(enabled: Boolean) {
         this.chargingEnabled = enabled
+    }
+
+    private fun updateSensorRegistration() {
+        if (!isRunning) return
+        if (fallEnabled || slapEnabled) {
+            accelerometer?.also {
+                sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+            }
+        } else {
+            sensorManager.unregisterListener(this, accelerometer)
+        }
     }
 
     fun setVoiceType(type: VoiceType) {
@@ -56,10 +69,17 @@ class SensorService : Service(), SensorEventListener {
     private val FALL_THRESHOLD_LOW = 3.0f
     private val FALL_IMPACT_HIGH = 20.0f
 
-    private val slapThreshold: Float
-        get() = 40f - (sensitivity / 100f) * 28f
-    private val fallThresholdLow: Float
-        get() = 1f + (sensitivity / 100f) * 4f
+    private val slapThresholdSq: Float
+        get() {
+            val t = 40f - (sensitivity / 100f) * 28f
+            return t * t
+        }
+    private val fallThresholdLowSq: Float
+        get() {
+            val t = 1f + (sensitivity / 100f) * 4f
+            return t * t
+        }
+    private val FALL_IMPACT_HIGH_SQ = 400.0f // 20.0^2
 
     override fun onCreate() {
         super.onCreate()
@@ -80,9 +100,7 @@ class SensorService : Service(), SensorEventListener {
     }
 
     private fun startListening() {
-        accelerometer?.also {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
-        }
+        updateSensorRegistration()
         registerChargingReceiver()
     }
 
@@ -99,16 +117,20 @@ class SensorService : Service(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_ACCELEROMETER) return
-        val magnitude = sqrt(event.values[0].pow(2) + event.values[1].pow(2) + event.values[2].pow(2))
+        
+        val x = event.values[0]
+        val y = event.values[1]
+        val z = event.values[2]
+        val magSq = x * x + y * y + z * z
         val now = SystemClock.elapsedRealtime()
 
         if (fallEnabled) {
-            if (!isFalling && magnitude < fallThresholdLow) {
+            if (!isFalling && magSq < fallThresholdLowSq) {
                 isFalling = true
                 fallStartTime = now
             } else if (isFalling) {
                 val fallDuration = now - fallStartTime
-                if (magnitude > FALL_IMPACT_HIGH && fallDuration in 100..2000) {
+                if (magSq > FALL_IMPACT_HIGH_SQ && fallDuration in 100..2000) {
                     isFalling = false
                     triggerMoan(MoanType.FALL)
                 } else if (fallDuration > 2500) {
@@ -117,7 +139,7 @@ class SensorService : Service(), SensorEventListener {
             }
         }
 
-        if (slapEnabled && magnitude > slapThreshold) {
+        if (slapEnabled && magSq > slapThresholdSq) {
             triggerMoan(MoanType.SLAP)
         }
     }
