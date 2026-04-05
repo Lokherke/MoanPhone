@@ -66,23 +66,23 @@ class SensorService : Service(), SensorEventListener {
         slapEnabled = prefs.getBoolean("slapEnabled", true)
         chargingEnabled = prefs.getBoolean("chargingEnabled", true)
         val voiceStr = prefs.getString("voiceType", VoiceType.FEMALE.name)
-        voiceType = VoiceType.valueOf(voiceStr ?: VoiceType.FEMALE.name)
+        voiceType = try { VoiceType.valueOf(voiceStr ?: "FEMALE") } catch (e: Exception) { VoiceType.FEMALE }
     }
 
     private fun updateSensorRegistration() {
         if (!isRunning) return
+        sensorManager.unregisterListener(this)
         if (fallEnabled || slapEnabled) {
             accelerometer?.also {
                 sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
             }
-        } else {
-            sensorManager.unregisterListener(this, accelerometer)
         }
     }
 
     private var isFalling = false
     private var fallStartTime = 0L
     
+    // Efficiency: Pre-calculate squared thresholds to avoid sqrt() in onSensorChanged
     private val slapThresholdSq: Float
         get() {
             val t = 40f - (sensitivity / 100f) * 28f
@@ -93,7 +93,7 @@ class SensorService : Service(), SensorEventListener {
             val t = 1f + (sensitivity / 100f) * 4f
             return t * t
         }
-    private val FALL_IMPACT_HIGH_SQ = 400.0f // 20.0^2
+    private val FALL_IMPACT_HIGH_SQ = 400.0f // 20.0 squared
 
     override fun onCreate() {
         super.onCreate()
@@ -104,6 +104,18 @@ class SensorService : Service(), SensorEventListener {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Efficiency: Read initial state from intent to avoid delay before Activity binds
+        intent?.let {
+            if (it.hasExtra("EXTRA_VOICE_TYPE")) {
+                val vType = it.getStringExtra("EXTRA_VOICE_TYPE")
+                voiceType = try { VoiceType.valueOf(vType ?: "FEMALE") } catch (e: Exception) { voiceType }
+                sensitivity = it.getFloatExtra("EXTRA_SENSITIVITY", sensitivity)
+                fallEnabled = it.getBooleanExtra("EXTRA_FALL_ENABLED", fallEnabled)
+                slapEnabled = it.getBooleanExtra("EXTRA_SLAP_ENABLED", slapEnabled)
+                chargingEnabled = it.getBooleanExtra("EXTRA_CHARGING_ENABLED", chargingEnabled)
+            }
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(NOTIFICATION_ID, buildNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
         } else {
@@ -133,19 +145,20 @@ class SensorService : Service(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_ACCELEROMETER) return
         
+        // Efficiency: Use squared magnitude to avoid expensive sqrt() and pow() calls
         val x = event.values[0]
         val y = event.values[1]
         val z = event.values[2]
-        val magSq = x * x + y * y + z * z
+        val magnitudeSq = x * x + y * y + z * z
         val now = SystemClock.elapsedRealtime()
 
         if (fallEnabled) {
-            if (!isFalling && magSq < fallThresholdLowSq) {
+            if (!isFalling && magnitudeSq < fallThresholdLowSq) {
                 isFalling = true
                 fallStartTime = now
             } else if (isFalling) {
                 val fallDuration = now - fallStartTime
-                if (magSq > FALL_IMPACT_HIGH_SQ && fallDuration in 100..2000) {
+                if (magnitudeSq > FALL_IMPACT_HIGH_SQ && fallDuration in 100..2000) {
                     isFalling = false
                     triggerMoan(MoanType.FALL)
                 } else if (fallDuration > 2500) {
@@ -154,7 +167,7 @@ class SensorService : Service(), SensorEventListener {
             }
         }
 
-        if (slapEnabled && magSq > slapThresholdSq) {
+        if (slapEnabled && magnitudeSq > slapThresholdSq) {
             triggerMoan(MoanType.SLAP)
         }
     }

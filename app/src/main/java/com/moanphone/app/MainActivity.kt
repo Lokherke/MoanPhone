@@ -56,18 +56,26 @@ class MainActivity : AppCompatActivity() {
 
         binding.sliderSensitivity.addOnChangeListener { _, value, _ ->
             binding.tvSensitivityValue.text = "Sensitivity: ${value.toInt()}%"
+            val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
+            prefs.edit().putFloat("sensitivity", value).apply()
             sensorService?.setSensitivity(value)
         }
 
         binding.switchFall.setOnCheckedChangeListener { _, checked ->
+            val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
+            prefs.edit().putBoolean("fallEnabled", checked).apply()
             sensorService?.setFallDetectionEnabled(checked)
         }
 
         binding.switchSlap.setOnCheckedChangeListener { _, checked ->
+            val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
+            prefs.edit().putBoolean("slapEnabled", checked).apply()
             sensorService?.setSlapDetectionEnabled(checked)
         }
 
         binding.switchCharging.setOnCheckedChangeListener { _, checked ->
+            val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
+            prefs.edit().putBoolean("chargingEnabled", checked).apply()
             sensorService?.setChargingDetectionEnabled(checked)
         }
 
@@ -77,12 +85,21 @@ class MainActivity : AppCompatActivity() {
             } else {
                 SensorService.VoiceType.FEMALE
             }
+            val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
+            prefs.edit().putString("voiceType", voiceType.name).apply()
             sensorService?.setVoiceType(voiceType)
         }
     }
 
     private fun startMoanService() {
-        val intent = Intent(this, SensorService::class.java)
+        val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
+        val intent = Intent(this, SensorService::class.java).apply {
+            putExtra("EXTRA_VOICE_TYPE", prefs.getString("voiceType", SensorService.VoiceType.FEMALE.name))
+            putExtra("EXTRA_SENSITIVITY", prefs.getFloat("sensitivity", 50f))
+            putExtra("EXTRA_FALL_ENABLED", prefs.getBoolean("fallEnabled", true))
+            putExtra("EXTRA_SLAP_ENABLED", prefs.getBoolean("slapEnabled", true))
+            putExtra("EXTRA_CHARGING_ENABLED", prefs.getBoolean("chargingEnabled", true))
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
         } else {
@@ -110,10 +127,12 @@ class MainActivity : AppCompatActivity() {
         binding.tvStatus.text = if (running) "Active – listening for events" else "Inactive"
         binding.statusDot.setImageResource(if (running) R.drawable.dot_active else R.drawable.dot_inactive)
         
-        // Update slider and switches to match current service state
+        // Update slider and switches to match current saved state
         val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
-        binding.sliderSensitivity.value = prefs.getFloat("sensitivity", 50f)
-        binding.tvSensitivityValue.text = "Sensitivity: ${binding.sliderSensitivity.value.toInt()}%"
+        val sensitivity = prefs.getFloat("sensitivity", 50f)
+        binding.sliderSensitivity.value = sensitivity
+        binding.tvSensitivityValue.text = "Sensitivity: ${sensitivity.toInt()}%"
+        
         binding.switchFall.isChecked = prefs.getBoolean("fallEnabled", true)
         binding.switchSlap.isChecked = prefs.getBoolean("slapEnabled", true)
         binding.switchCharging.isChecked = prefs.getBoolean("chargingEnabled", true)
