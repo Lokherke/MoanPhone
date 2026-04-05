@@ -189,14 +189,14 @@ class SensorService : Service(), SensorEventListener {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(CHANNEL_ID, "MoanPhone Service", NotificationManager.IMPORTANCE_LOW)
+            val channel = NotificationChannel(CHANNEL_ID, "SlapPhone Service", NotificationManager.IMPORTANCE_LOW)
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
     }
 
     private fun buildNotification(): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("MoanPhone is active 😩")
+            .setContentTitle("SlapPhone is active 👋")
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setOngoing(true)
             .build()
@@ -212,7 +212,7 @@ class SensorService : Service(), SensorEventListener {
     }
 
     companion object {
-        const val CHANNEL_ID = "moanphone_channel"
+        const val CHANNEL_ID = "slapphone_channel"
         const val NOTIFICATION_ID = 1
     }
     enum class MoanType { FALL, SLAP, CHARGE }

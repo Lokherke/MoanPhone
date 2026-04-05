@@ -24,7 +24,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="MoanPhone"
+            android:text="SlapPhone"
             android:textSize="32sp"
             android:textColor="#FF6B9D"
             android:textStyle="bold"
