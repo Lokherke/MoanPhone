@@ -31,22 +31,42 @@ class SensorService : Service(), SensorEventListener {
     private var chargingEnabled = true
     private var voiceType = VoiceType.FEMALE
 
+    private val prefs by lazy { getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE) }
+
     fun setSensitivity(value: Float) {
         this.sensitivity = value
+        prefs.edit().putFloat("sensitivity", value).apply()
     }
 
     fun setFallDetectionEnabled(enabled: Boolean) {
         this.fallEnabled = enabled
+        prefs.edit().putBoolean("fallEnabled", enabled).apply()
         updateSensorRegistration()
     }
 
     fun setSlapDetectionEnabled(enabled: Boolean) {
         this.slapEnabled = enabled
+        prefs.edit().putBoolean("slapEnabled", enabled).apply()
         updateSensorRegistration()
     }
 
     fun setChargingDetectionEnabled(enabled: Boolean) {
         this.chargingEnabled = enabled
+        prefs.edit().putBoolean("chargingEnabled", enabled).apply()
+    }
+
+    fun setVoiceType(type: VoiceType) {
+        this.voiceType = type
+        prefs.edit().putString("voiceType", type.name).apply()
+    }
+
+    private fun loadSettings() {
+        sensitivity = prefs.getFloat("sensitivity", 50f)
+        fallEnabled = prefs.getBoolean("fallEnabled", true)
+        slapEnabled = prefs.getBoolean("slapEnabled", true)
+        chargingEnabled = prefs.getBoolean("chargingEnabled", true)
+        val voiceStr = prefs.getString("voiceType", VoiceType.FEMALE.name)
+        voiceType = VoiceType.valueOf(voiceStr ?: VoiceType.FEMALE.name)
     }
 
     private fun updateSensorRegistration() {
@@ -60,15 +80,9 @@ class SensorService : Service(), SensorEventListener {
         }
     }
 
-    fun setVoiceType(type: VoiceType) {
-        this.voiceType = type
-    }
-
     private var isFalling = false
     private var fallStartTime = 0L
-    private val FALL_THRESHOLD_LOW = 3.0f
-    private val FALL_IMPACT_HIGH = 20.0f
-
+    
     private val slapThresholdSq: Float
         get() {
             val t = 40f - (sensitivity / 100f) * 28f
@@ -83,6 +97,7 @@ class SensorService : Service(), SensorEventListener {
 
     override fun onCreate() {
         super.onCreate()
+        loadSettings()
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         createNotificationChannel()

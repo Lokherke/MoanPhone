@@ -110,9 +110,19 @@ class MainActivity : AppCompatActivity() {
         binding.tvStatus.text = if (running) "Active – listening for events" else "Inactive"
         binding.statusDot.setImageResource(if (running) R.drawable.dot_active else R.drawable.dot_inactive)
         
-        // Update slider and switches to match current service state if needed
-        sensorService?.let {
-            // These would ideally come from the service or shared prefs
+        // Update slider and switches to match current service state
+        val prefs = getSharedPreferences("MoanPhonePrefs", MODE_PRIVATE)
+        binding.sliderSensitivity.value = prefs.getFloat("sensitivity", 50f)
+        binding.tvSensitivityValue.text = "Sensitivity: ${binding.sliderSensitivity.value.toInt()}%"
+        binding.switchFall.isChecked = prefs.getBoolean("fallEnabled", true)
+        binding.switchSlap.isChecked = prefs.getBoolean("slapEnabled", true)
+        binding.switchCharging.isChecked = prefs.getBoolean("chargingEnabled", true)
+        
+        val voiceStr = prefs.getString("voiceType", SensorService.VoiceType.FEMALE.name)
+        if (voiceStr == SensorService.VoiceType.MALE.name) {
+            binding.rbMale.isChecked = true
+        } else {
+            binding.rbFemale.isChecked = true
         }
     }
 
