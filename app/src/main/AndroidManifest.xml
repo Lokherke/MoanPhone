@@ -11,7 +11,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:networkSecurityConfig="@xml/network_security_config"
         android:icon="@drawable/moan_phone_pic"
-        android:label="SlapPhone"
+        android:label="MoanPhone"
         android:supportsRtl="true"
         android:extractNativeLibs="false"
         android:usesCleartextTraffic="false"

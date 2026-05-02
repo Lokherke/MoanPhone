@@ -61,14 +61,23 @@ class SensorService : Service(), SensorEventListener {
     private val fallThresholdLow: Float
         get() = 1f + (sensitivity / 100f) * 4f
 
+    private var wakeLock: PowerManager.WakeLock? = null
+
     override fun onCreate() {
         super.onCreate()
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SlapPhone::SensorWakeLock")
+        
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (wakeLock?.isHeld == false) {
+            wakeLock?.acquire()
+        }
+        
         intent?.let {
             val voiceStr = it.getStringExtra("EXTRA_VOICE_TYPE")
             if (voiceStr != null) {
@@ -151,6 +160,11 @@ class SensorService : Service(), SensorEventListener {
                             it.release()
                             if (slapMediaPlayer == it) slapMediaPlayer = null
                         }
+                        setOnErrorListener { mp, _, _ ->
+                            mp.release()
+                            if (slapMediaPlayer == mp) slapMediaPlayer = null
+                            true
+                        }
                         start()
                     }
                 }
@@ -164,6 +178,11 @@ class SensorService : Service(), SensorEventListener {
                             it.release()
                             if (fallMediaPlayer == it) fallMediaPlayer = null
                         }
+                        setOnErrorListener { mp, _, _ ->
+                            mp.release()
+                            if (fallMediaPlayer == mp) fallMediaPlayer = null
+                            true
+                        }
                         start()
                     }
                 }
@@ -176,6 +195,11 @@ class SensorService : Service(), SensorEventListener {
                         setOnCompletionListener { 
                             it.release()
                             if (chargeMediaPlayer == it) chargeMediaPlayer = null
+                        }
+                        setOnErrorListener { mp, _, _ ->
+                            mp.release()
+                            if (chargeMediaPlayer == mp) chargeMediaPlayer = null
+                            true
                         }
                         start()
                     }
@@ -199,11 +223,16 @@ class SensorService : Service(), SensorEventListener {
             .setContentTitle("SlapPhone is active 👋")
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setOngoing(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .build()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
+        }
         sensorManager.unregisterListener(this)
         chargingReceiver?.let { unregisterReceiver(it) }
         slapMediaPlayer?.release()
