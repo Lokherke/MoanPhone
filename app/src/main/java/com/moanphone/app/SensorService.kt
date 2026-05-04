@@ -30,6 +30,7 @@ class SensorService : Service(), SensorEventListener {
     private var slapEnabled = true
     private var chargingEnabled = true
     private var voiceType = VoiceType.FEMALE
+    private var customSoundUri: String? = null
 
     fun setSensitivity(value: Float) {
         this.sensitivity = value
@@ -49,6 +50,10 @@ class SensorService : Service(), SensorEventListener {
 
     fun setVoiceType(type: VoiceType) {
         this.voiceType = type
+    }
+
+    fun setCustomSoundUri(uri: String?) {
+        this.customSoundUri = uri
     }
 
     private var isFalling = false
@@ -83,6 +88,7 @@ class SensorService : Service(), SensorEventListener {
             if (voiceStr != null) {
                 voiceType = try { VoiceType.valueOf(voiceStr) } catch (e: Exception) { VoiceType.FEMALE }
             }
+            customSoundUri = it.getStringExtra("EXTRA_CUSTOM_SOUND_URI")
             sensitivity = it.getFloatExtra("EXTRA_SENSITIVITY", sensitivity)
             fallEnabled = it.getBooleanExtra("EXTRA_FALL_ENABLED", fallEnabled)
             slapEnabled = it.getBooleanExtra("EXTRA_SLAP_ENABLED", slapEnabled)
@@ -143,6 +149,11 @@ class SensorService : Service(), SensorEventListener {
     }
 
     private fun triggerMoan(type: MoanType) {
+        if (voiceType == VoiceType.CUSTOM && customSoundUri != null) {
+            playUri(customSoundUri!!, type)
+            return
+        }
+
         val resId = when (type) {
             MoanType.FALL -> if (voiceType == VoiceType.FEMALE) R.raw.fallsound else R.raw.m_fallsound
             MoanType.SLAP -> if (voiceType == VoiceType.FEMALE) R.raw.slapsound else R.raw.m_slapsound
@@ -208,6 +219,36 @@ class SensorService : Service(), SensorEventListener {
         } catch (e: Exception) { e.printStackTrace() }
     }
 
+    private fun playUri(uriStr: String, type: MoanType) {
+        try {
+            val uri = android.net.Uri.parse(uriStr)
+            val player = MediaPlayer().apply {
+                setDataSource(this@SensorService, uri)
+                prepare()
+                setOnCompletionListener { it.release() }
+                setOnErrorListener { mp, _, _ -> mp.release(); true }
+                start()
+            }
+            // Track the player to allow stopping if necessary
+            when (type) {
+                MoanType.SLAP -> {
+                    slapMediaPlayer?.release()
+                    slapMediaPlayer = player
+                }
+                MoanType.FALL -> {
+                    fallMediaPlayer?.release()
+                    fallMediaPlayer = player
+                }
+                MoanType.CHARGE -> {
+                    chargeMediaPlayer?.release()
+                    chargeMediaPlayer = player
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
     override fun onBind(intent: Intent?): IBinder = binder
 
@@ -245,5 +286,5 @@ class SensorService : Service(), SensorEventListener {
         const val NOTIFICATION_ID = 1
     }
     enum class MoanType { FALL, SLAP, CHARGE }
-    enum class VoiceType { FEMALE, MALE }
+    enum class VoiceType { FEMALE, MALE, CUSTOM }
 }

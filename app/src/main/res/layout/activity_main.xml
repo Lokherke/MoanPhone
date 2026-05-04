@@ -118,7 +118,8 @@
                     android:id="@+id/rgVoiceType"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
 
                     <RadioButton
                         android:id="@+id/rbFemale"
@@ -138,7 +139,37 @@
                         android:text="Male 🚹"
                         android:textColor="#FFFFFF"
                         android:buttonTint="#FF6B9D" />
+
+                    <RadioButton
+                        android:id="@+id/rbCustom"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Custom ✨"
+                        android:textColor="#FFFFFF"
+                        android:buttonTint="#FF6B9D" />
                 </RadioGroup>
+
+                <Button
+                    android:id="@+id/btnPickCustomSound"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Select Custom Sound File"
+                    android:textColor="#FF6B9D"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:visibility="gone"
+                    app:strokeColor="#FF6B9D" />
+
+                <TextView
+                    android:id="@+id/tvCustomSoundName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="No file selected"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    android:gravity="center"
+                    android:layout_marginTop="4dp"
+                    android:visibility="gone" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
