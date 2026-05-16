@@ -16,7 +16,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="😩"
+            android:text="👋"
             android:textSize="64sp"
             android:gravity="center"
             android:layout_marginTop="16dp" />
@@ -24,7 +24,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="MoanPhone"
+            android:text="SlapPhone"
             android:textSize="32sp"
             android:textColor="#FF6B9D"
             android:textStyle="bold"
@@ -82,7 +82,7 @@
             android:id="@+id/btnToggle"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="🟢  START MOANING"
+            android:text="🟢  START SLAPPING"
             android:textColor="#FFFFFF"
             android:textSize="16sp"
             android:backgroundTint="#FF6B9D"
@@ -150,26 +150,118 @@
                         android:buttonTint="#FF6B9D" />
                 </RadioGroup>
 
-                <Button
-                    android:id="@+id/btnPickCustomSound"
+                <LinearLayout
+                    android:id="@+id/layoutCustomSounds"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Select Custom Sound File"
-                    android:textColor="#FF6B9D"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:visibility="gone"
-                    app:strokeColor="#FF6B9D" />
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
-                <TextView
-                    android:id="@+id/tvCustomSoundName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="No file selected"
-                    android:textColor="#888888"
-                    android:textSize="12sp"
-                    android:gravity="center"
-                    android:layout_marginTop="4dp"
-                    android:visibility="gone" />
+                    <!-- Slap Sound -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <Button
+                            android:id="@+id/btnPickSlapSound"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Select Slap 👋"
+                            android:textColor="#FF6B9D"
+                            android:layout_marginEnd="8dp"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            app:strokeColor="#FF6B9D" />
+                        <Button
+                            android:id="@+id/btnRecordSlapSound"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🎤"
+                            android:textColor="#FF6B9D"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            app:strokeColor="#FF6B9D" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvSlapSoundName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No file selected"
+                        android:textColor="#888888"
+                        android:textSize="11sp"
+                        android:gravity="center"
+                        android:layout_marginBottom="8dp" />
+
+                    <!-- Fall Sound -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <Button
+                            android:id="@+id/btnPickFallSound"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Select Fall 📉"
+                            android:textColor="#FF6B9D"
+                            android:layout_marginEnd="8dp"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            app:strokeColor="#FF6B9D" />
+                        <Button
+                            android:id="@+id/btnRecordFallSound"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🎤"
+                            android:textColor="#FF6B9D"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            app:strokeColor="#FF6B9D" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvFallSoundName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No file selected"
+                        android:textColor="#888888"
+                        android:textSize="11sp"
+                        android:gravity="center"
+                        android:layout_marginBottom="8dp" />
+
+                    <!-- Charge Sound -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <Button
+                            android:id="@+id/btnPickChargeSound"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Select Charge 🔌"
+                            android:textColor="#FF6B9D"
+                            android:layout_marginEnd="8dp"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            app:strokeColor="#FF6B9D" />
+                        <Button
+                            android:id="@+id/btnRecordChargeSound"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🎤"
+                            android:textColor="#FF6B9D"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            app:strokeColor="#FF6B9D" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvChargeSoundName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No file selected"
+                        android:textColor="#888888"
+                        android:textSize="11sp"
+                        android:gravity="center" />
+
+                </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
